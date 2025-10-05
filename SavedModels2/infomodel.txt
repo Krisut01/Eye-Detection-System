@@ -1,0 +1,51 @@
+
+
+C:\Subjects 2024\4thYr\CSC-123\Files\pytorch>python ptrainer_torch.py
+Using device: cuda
+CUDA device count: 1
+GPU Name: NVIDIA GeForce RTX 3060 Laptop GPU
+Found 2 classes: ['closed_eyes', 'open_eyes']
+Train/Val/Test sizes: 1126/141/141
+Per-class counts (train/val/test):
+  closed_eyes: 566/71/71
+  open_eyes: 560/70/70
+C:\Users\james\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\optim\lr_scheduler.py:62: UserWarning: The verbose parameter is deprecated. Please use get_last_lr() to access the learning rate.
+  warnings.warn(
+C:\Users\james\AppData\Local\Programs\Python\Python310\lib\site-packages\PIL\Image.py:1045: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+C:\Users\james\AppData\Local\Programs\Python\Python310\lib\site-packages\PIL\Image.py:1045: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+Epoch 01/30 - train_loss: 0.6704 acc: 0.6670 | val_loss: 0.6526 acc: 0.6383
+Saved new best model at epoch 1 with val_acc 0.6383
+C:\Users\james\AppData\Local\Programs\Python\Python310\lib\site-packages\PIL\Image.py:1045: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+Epoch 02/30 - train_loss: 0.5902 acc: 0.8579 | val_loss: 0.5773 acc: 0.8369
+Saved new best model at epoch 2 with val_acc 0.8369
+Early stopping: validation accuracy 0.8369 >= threshold 0.8000
+Fine-tuning last 3 feature blocks...
+C:\Users\james\AppData\Local\Programs\Python\Python310\lib\site-packages\PIL\Image.py:1045: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+[FT] Epoch 01/10 - train_loss: 0.4109 acc: 0.9503 | val_loss: 0.1576 acc: 0.9929
+Saved new best fine-tuned model at epoch 1 with val_acc 0.9929
+Early stopping (fine-tune): validation accuracy 0.9929 >= threshold 0.8000
+
+Test Results:
+Loss: 0.1599 | Accuracy: 1.0000
+
+Classification Report:
+              precision    recall  f1-score   support
+
+ closed_eyes       1.00      1.00      1.00        71
+   open_eyes       1.00      1.00      1.00        70
+
+    accuracy                           1.00       141
+   macro avg       1.00      1.00      1.00       141
+weighted avg       1.00      1.00      1.00       141
+
+
+Confusion Matrix:
+[[71  0]
+ [ 0 70]]
+Saved training curves to C:\Subjects 2024\4thYr\CSC-123\Midterm\SavedModels\training_history_torch.png
+
+C:\Subjects 2024\4thYr\CSC-123\Files\pytorch>py
