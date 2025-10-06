@@ -22,6 +22,10 @@ frame_height = 720
 # Eye detection threshold
 EYE_AR_THRESH = 0.25  # Lower threshold for more accurate detection
 
+# Fusion weights for fast UI feedback
+W_CNN = 0.4
+W_EAR = 0.6
+
 # Global variables
 eye_frame_counter = 0
 last_detection_states = []  # Store last few detection states for consistency
@@ -283,7 +287,7 @@ def detect_eyes_cnn(frame):
             is_eyes_closed = closed_prob > 0.85  # Very high threshold for closed eyes
             confidence = max(closed_prob, open_prob)
         
-        return is_eyes_closed, confidence
+        return is_eyes_closed, confidence, closed_prob
     except Exception as e:
         print(f"CNN error: {e}")
         return False, 0.0
@@ -388,9 +392,9 @@ def detect_eyes_landmarks(frame):
             
             # Only consider eyes closed if EAR is below adaptive threshold
             is_eyes_closed = ear < threshold
-            return is_eyes_closed, ear
+            return is_eyes_closed, ear, threshold
         else:
-            return False, 0.0
+            return False, 0.0, 0.0
             
     except Exception as e:
         print(f"Landmark detection error: {e}")
@@ -413,10 +417,18 @@ try:
         # Detect eyes using both methods
         try:
             # CNN detection
-            cnn_closed, cnn_confidence = detect_eyes_cnn(frame)
+            cnn_closed, cnn_confidence, cnn_closed_prob = detect_eyes_cnn(frame)
             
             # Landmark detection
-            landmark_closed, ear_value = detect_eyes_landmarks(frame)
+            landmark_closed, ear_value, ear_threshold = detect_eyes_landmarks(frame)
+
+            # --- Fast UI fusion (per-frame, blink-responsive) ---
+            # Convert EAR to a closed score: >0 means below threshold; clamp to [0,1]
+            ear_closed_score = 0.0
+            if ear_threshold > 0:
+                ear_closed_score = max(0.0, min(1.0, (ear_threshold - ear_value) / ear_threshold))
+            ui_score = W_CNN * cnn_closed_prob + W_EAR * ear_closed_score
+            ui_closed = (cnn_closed or landmark_closed) or (ui_score > 0.5)
             
             # --- ULTRA-CONSERVATIVE DETECTION LOGIC ---
             # Check if face is too far or detection is unreliable
@@ -459,7 +471,9 @@ try:
             
             # --- Temporal stability with hysteresis to avoid 1-frame flips ---
             now = time.monotonic()
-            observed_state = "closed" if final_result else "open"
+            # Use conservative result or strong fused score for alert pipeline
+            alert_observed_closed = final_result or (ui_score > 0.7)
+            observed_state = "closed" if alert_observed_closed else "open"
             if observed_state == stable_state:
                 candidate_state = None
                 candidate_since = 0.0
@@ -493,11 +507,11 @@ try:
                 closed_start_time = None
                 alert_active = False
 
-            # Overlay status: show real-time observed state for blink visibility
+            # Overlay status: show fast per-frame UI state for blinks
             # and show fatigue alert when active
             if alert_active:
                 cv2.putText(frame, "Alert: Fatigue detected", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            if observed_state == "closed":
+            if ui_closed:
                 cv2.putText(frame, "Eyes Closed", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 2)
             else:
                 cv2.putText(frame, "Eyes Open", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
